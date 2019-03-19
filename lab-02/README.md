@@ -280,11 +280,9 @@ docker run <COLLEAGUE_DOCKER_HUB_USERNAME>/centos_elinks_dockerfile:7
 
 ## Task 7: clean up
 
-To clean up everything run the following commands:
+To clean up run the following commands:
 
 ```
-docker stop $(docker ps -q)
-docker rm $(docker ps -qa)
-docker rmi -f $(docker images -aq)
+docker system prune
 unset DOCKER_HUB_USERNAME
 ```

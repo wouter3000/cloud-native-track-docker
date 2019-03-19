@@ -285,12 +285,18 @@ On your laptop make some changes to the index.html (`html/index.html`), for
 example the background color.  Once you made some changes and saved those on
 your laptop (hard) refresh the page in your browser to see the changes.
 
-## Task 5: clean up
-
-To clean up everything run the following commands:
+If nginx is working with the volume stop and remove the container again using 
+the commands below:
 
 ```
-docker stop $(docker ps -q)
-docker rm $(docker ps -qa)
-docker rmi -f $(docker images -aq)
+docker stop nginx_container_volume
+docker rm nginx_container_volume
+```
+
+## Task 5: clean up
+
+To clean up run the following command:
+
+```
+docker system prune
 ```
