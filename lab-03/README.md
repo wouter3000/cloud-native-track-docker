@@ -14,7 +14,7 @@ docker [OPTIONS] command
 For example:
 
 ```
-docker -d run nginx
+docker run -d nginx
 ```
 
 Some time ago Docker introduced the concept of *management commands*, you can
@@ -23,7 +23,7 @@ followed by a subcommand.  If we construct the above command in the new way it
 would look like:
 
 ```
-docker container -d run command
+docker container run -d command
 ```
 
 During this lab we will mix these two different notations as some commands that
