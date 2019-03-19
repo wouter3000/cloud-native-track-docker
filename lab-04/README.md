@@ -261,7 +261,5 @@ image for the run process.
 To clean up everything run the following commands:
 
 ```
-docker stop $(docker ps -q)
-docker rm $(docker ps -qa)
-docker rmi -f $(docker images -aq)
+docker system prune
 ```
