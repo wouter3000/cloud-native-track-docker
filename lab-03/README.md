@@ -407,17 +407,11 @@ Deleted: sha256:3d885ba001946853c575c3e8480e84ac2c5b2d60100bf4976bd3af7682cab179
 Deleted: sha256:a406c9b0c676c29711c81d22a44b951e298744342d22462b6c8aab50f0b842f8
 ```
 
+## Task 6: clean up
+
 If you are running a lot of different (and especially large images and
 containers) it could happen that the filesystem will run out of space.  To clean
 up all unused containers/images you can use the following command:
-
-```
-docker system prune
-```
-
-## Task 6: clean up
-
-To clean up everything run the following commands:
 
 ```
 docker system prune
