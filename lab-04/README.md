@@ -308,7 +308,7 @@ FROM nginx
 CMD ["/bin/echo" , "Hello World!"]
 ```
 
-And build the image.
+Build the image with the edited `Dockerfile`.
 
 ```
 docker build -t hello-world .
@@ -323,7 +323,8 @@ Removing intermediate container 042aca86ca67
 Successfully built a2ec1c7081a6
 ```
 
-Now run this image.
+If you will run the image now you will see that you get the same output as the
+`ENTRYPOINT` line. This is because we are currently not overwriting the command. 
 
 ```
 docker run -ti hello-world
