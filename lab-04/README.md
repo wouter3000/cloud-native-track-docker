@@ -245,6 +245,101 @@ nginx@1751e41489bb:/$
 
 ## Task 6: Entrypoints vs. CMD  
 
+In a nutshel, `CMD` sets default command and/or parameters, which can be overwritten
+from command line when docker container runs.
+
+`ENTRYPOINT` configures a container that will run as an executable.
+
+So let's start with creating an image with an `ENTRYPOINT` that does `echo Hello
+World!`.
+
+```
+FROM nginx
+
+ENTRYPOINT ["/bin/echo" , "Hello World!"]
+```
+
+Build the `hello-world` image with this `Dockerfile`.
+
+```
+docker build -t hello-world .
+
+Sending build context to Docker daemon  2.048kB
+Step 1/2 : FROM nginx
+ ---> 53f3fd8007f7
+Step 2/2 : ENTRYPOINT ["/bin/echo" , "Hello World!"]
+ ---> Running in 50c122fdb47c
+Removing intermediate container 50c122fdb47c
+ ---> 44314b2c9cc9
+Successfully built 44314b2c9cc9
+Successfully tagged hello-world:latest
+```
+
+The image is now created with an `ENTRYPOINT` this means that we won't be able to
+overwrite the initial `command` the container is going to do. It is possible to
+add more arguments to this command though.
+
+```
+docker run -ti hello-world
+
+Hello World!
+
+docker run -ti hello-world my argument
+
+Hello World! my argument
+```
+
+So this means that if you are going to do `-ti bash` you are not actually
+overwriting the `echo` command but you are just adding the `bash` string to the
+`echo` command.
+
+```
+docker run -ti hello-world bash
+
+Hello World! bash
+```
+
+This is totally different from the `CMD` line in the `Dockerfile`. Create the
+image now with the `CMD` line.
+
+```
+FROM nginx
+
+CMD ["/bin/echo" , "Hello World!"]
+```
+
+And build the image.
+
+```
+docker build -t hello-world .
+
+Sending build context to Docker daemon  2.048kB
+Step 1/2 : FROM nginx
+ ---> 53f3fd8007f7
+Step 2/2 : CMD ["/bin/echo" , "Hello World!"]
+ ---> Running in 042aca86ca67
+Removing intermediate container 042aca86ca67
+ ---> a2ec1c7081a6
+Successfully built a2ec1c7081a6
+```
+
+Now run this image.
+
+```
+docker run -ti hello-world
+
+Hello World!
+```
+
+If we are going to add `bash` to the `run` command you will see that we will
+`exec` into the container, thus overwrite the initial command.
+
+```
+docker run -ti hello-world bash
+
+root@fa9a3a2a62f1:/#
+```
+
 ## Task 7: Multi-stage image builds
 
 Another way to keep Docker images as small as possible is to use the multi-stage
