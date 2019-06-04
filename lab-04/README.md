@@ -173,41 +173,42 @@ cache and will slow the build.  The initial build is still slow (you will see
 the counter), but the build  after that will be a lot quicker as the cache is
 used more optimally!
 
-## Task 5: Docker build User
+## Task 5: Dockerfile user
 
-A simple example to show how the `USER` tag works in a `Dockerfile` we will create
-a default `Dockerfile` without a `USER` tag. This `Dockerfile` is going to be
-very simple.
+In this task we will see how you can use the `USER` instruction in your 
+`Dockerfile`to change the user that the container will run as.
 
-```
-FROM nginx
-```
-
-So basically we are just creating a new `nginx` image with the base `nginx` image.
-It's not something that should be done but this is for workshop purposes only.
-
-So if the image is build we will see that we connect to the container with the
-`root` user.
+First of all we will run the default `nginx` image, we will use the `whoami` 
+command to determine the user that the container runs as:
 
 ```
-docker build -t my_nginx .
+docker run nginx whoami
 
-Sending build context to Docker daemon  2.048kB
-Step 1/1 : FROM nginx
- ---> 53f3fd8007f7
-Successfully built 53f3fd8007f7
-Successfully tagged my_nginx:latest
+Unable to find image 'nginx:latest' locally
+latest: Pulling from library/nginx
+743f2d6c1f65: Already exists
+6bfc4ec4420a: Pull complete
+688a776db95f: Pull complete
+Digest: sha256:23b4dcdf0d34d4a129755fc6f52e1c6e23bb34ea011b315d87e193033bcd1b68
+Status: Downloaded newer image for nginx:latest
+root
 ```
 
-Now we will execute into the container.
+You will see that the container runs as `root`.  You can also see this clearly 
+when you run a `bash` shell inside the container:
 
 ```
-docker run -ti my_nginx bash
+docker run -ti nginx bash
 
-root@6ae438732ee2:/#
+root@1334bbf9f148:/#
 ```
 
-Now build the image with the `USER` tag in the `Dockerfile`.
+Above you see clearly that the prompt changes to reflect the fact that you are 
+running as the `root` user.
+
+To change the user that the container will run as we will need to use the `USER` 
+instruction in our Dockerfile when building an image.  Create the following 
+Dockerfile:
 
 ```
 FROM nginx
@@ -215,10 +216,10 @@ FROM nginx
 USER nginx
 ```
 
-Again, this is a very simple `Dockerfile` but it does exactly what we are trying
-to achieve in this task.
+In the above Dockerfile we are simply starting from the `nginx` image and 
+changing the user to `nginx`.
 
-Build the image again with the same `Dockerfile`.
+Make a `my_nginx` image from the above Dockerfile:
 
 ```
 docker build -t my_nginx .
@@ -227,26 +228,88 @@ Sending build context to Docker daemon  2.048kB
 Step 1/2 : FROM nginx
  ---> 53f3fd8007f7
 Step 2/2 : USER nginx
- ---> Running in 47f7fa86101d
-Removing intermediate container 47f7fa86101d
- ---> 75ef857f7112
-Successfully built 75ef857f7112
+ ---> Running in f4a3cf9ba2cf
+Removing intermediate container f4a3cf9ba2cf
+ ---> 146d0d8f33fd
+Successfully built 146d0d8f33fd
 Successfully tagged my_nginx:latest
 ```
 
-If there is going to be executed into the container now it will connect with the
-`nginx` user.
+Now run the `whoami` command on the newly created image to see which user the 
+container is running as:
+
+```
+docker run my_nginx whoami
+
+nginx
+```
+
+Or run the command below to enter a shell inside the container:
 
 ```
 docker run -ti my_nginx bash
 
-nginx@1751e41489bb:/$
+nginx@5c42d03e77fd:/$
 ```
 
-## Task 6: Entrypoints vs. CMD  
+It is important to note that the container will run as the user that is 
+referenced in the **LAST** `USER` instruction.  As an example edit your 
+Dockerfile as below:
 
-In a nutshel, `CMD` sets default command and/or parameters, which can be overwritten
-from command line when docker container runs.
+```
+FROM nginx
+
+USER nginx
+
+USER root
+```
+
+Build a new image an check which user this container will be running as:
+
+```
+docker build -t my_root_nginx .
+
+Sending build context to Docker daemon  2.048kB
+Step 1/3 : FROM nginx
+ ---> 53f3fd8007f7
+Step 2/3 : USER nginx
+ ---> Using cache
+ ---> 146d0d8f33fd
+Step 3/3 : USER root
+ ---> Running in e65753fe4a8a
+Removing intermediate container e65753fe4a8a
+ ---> e2b67d2f5677
+Successfully built e2b67d2f5677
+Successfully tagged my_root_nginx:latest
+```
+
+Verify that the container will be running as the `root` user:
+
+```
+docker run my_root_nginx whoami
+root
+```
+
+The above example show the importance to always switch back to a non-root user 
+(for security purposes) after you needed to run something as the root user (for 
+example to install additional packages):
+
+```
+FROM nginx
+
+USER root
+
+RUN apt-get update && \
+    apt-get -y install elinks && \
+    rm -rf /var/lib/apt/lists/*
+
+USER nginx
+```
+
+## Task 6: ENTRYPOINT vs. CMD  
+
+In a nutshell, `CMD` sets default command and/or parameters, which can be 
+overwritten from the command line when docker container runs.
 
 `ENTRYPOINT` configures a container that will run as an executable.
 
@@ -275,9 +338,9 @@ Successfully built 44314b2c9cc9
 Successfully tagged hello-world:latest
 ```
 
-The image is now created with an `ENTRYPOINT` this means that we won't be able to
-overwrite the initial `command` the container is going to do. It is possible to
-add more arguments to this command though.
+The image is now created with an `ENTRYPOINT` this means that we won't be able 
+to overwrite the initial `command` the container is going to do. It is possible 
+to add more arguments to this command though.
 
 ```
 docker run -ti hello-world
@@ -298,6 +361,11 @@ docker run -ti hello-world bash
 
 Hello World! bash
 ```
+
+> NOTE: there is a way to override the entrypoint using the `--entrypoint` 
+> argument like so: `docker run --entrypoint "bash" -ti hello-world`, this 
+> command allows you to override the default entrypoint and replace it with the 
+> `bash` command
 
 This is totally different from the `CMD` line in the `Dockerfile`. Create the
 image now with the `CMD` line.
@@ -341,90 +409,7 @@ docker run -ti hello-world bash
 root@fa9a3a2a62f1:/#
 ```
 
-## Task 7: Multi-stage image builds
-
-Another way to keep Docker images as small as possible is to use the multi-stage
-functionality.  With it you can use different images at different stages, this
-is useful when you build you artefact in the first stage (where you will require
-all the different build tools) and deploy that artefact in into a lean and clean
-image.
-
-To show the power of multi-stage image builds we are going to use an Golang
-example.  Create a file `main.go` in your working directory with the following
-content:
-
-```
-package main
-
-import "fmt"
-
-func main() {
-	fmt.Println("Hello world")
-}
-```
-
-We will first build it without using multi-stage image builds.  To do so create
-a Dockerfile with the following content:
-
-```
-FROM golang:1.8.3
-WORKDIR /go/src/hello-world
-COPY main.go /go/src/hello-world
-RUN go install
-CMD ["hello-world"]
-```
-
-And build the image:
-
-```
-docker build -t golang-hello-world:legacy .
-```
-
-Run the image to see that it works:
-
-```
-docker run golang-hello-world:legacy
-```
-
-Now change the Dockerfile content to:
-
-```
-FROM golang:1.8.3 as builder
-WORKDIR /go/src/hello-world
-COPY main.go ./
-RUN go install
-RUN ldd /go/bin/hello-world | grep -q "not a dynamic executable"
-
-FROM scratch
-COPY --from=builder /go/bin/hello-world /hello-world
-CMD ["/hello-world"]
-```
-
-And build the image again:
-
-```
-docker build -t golang-hello-world:multistage .
-```
-
-Run the image to see that it works:
-
-```
-docker run golang-hello-world:multistage
-```
-
-Check the size differce of the images:
-
-```
-REPOSITORY             TAG                 IMAGE ID            CREATED              SIZE
-golang-hello-world     multistage          ab62167f4c3d        19 seconds ago       1.55MB
-golang-hello-world     legacy              d1c7e682e0fa        About a minute ago   701MB
-```
-
-The difference is huge, a couple of MB's instead of almost 1 GB.  For JAVA we
-can of course do the same.  Using a JDK image for the build process and a JRE
-image for the run process.
-
-## Task 6: clean up
+## Task 7: clean up
 
 To clean up everything run the following commands:
 
